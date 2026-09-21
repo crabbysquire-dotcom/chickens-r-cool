@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#78c940" />
+  <meta name="description" content="Ranch Runners is a colorful 3D chicken runner: collect golden eggs, dodge obstacles, and outrun the farmer." />
+  <title>Ranch Runners</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect rx='14' width='64' height='64' fill='%23ffd83d'/%3E%3Cellipse cx='32' cy='37' rx='19' ry='17' fill='white'/%3E%3Ccircle cx='39' cy='22' r='12' fill='white'/%3E%3Ccircle cx='43' cy='19' r='2.5' fill='%231d2925'/%3E%3Cpath d='M49 24l11 5-11 4z' fill='%23f59d22'/%3E%3Cpath d='M34 11l5 9-11-2z' fill='%23ef4b3f'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main id="game" aria-label="Ranch Runners game">
+    <div id="canvas-wrap"></div>
+
+    <section id="hud" aria-label="Game score" hidden>
+      <div class="stat"><span class="stat-label">SCORE</span><strong id="score">0</strong></div>
+      <div class="stat egg-stat"><span class="egg-icon" aria-hidden="true"></span><strong id="eggs">0</strong></div>
+      <div id="magnet-status" class="stat magnet-stat" hidden><span aria-hidden="true">🧲</span><strong id="magnet-time">8</strong></div>
+      <div id="double-status" class="stat double-stat" hidden><span aria-hidden="true">2×</span><strong id="double-time">8</strong></div>
+      <button id="pause-button" class="icon-button pause-button" type="button" aria-label="Pause game">Ⅱ</button>
+      <button id="sound-button" class="icon-button" type="button" aria-label="Mute sound">♪</button>
+    </section>
+
+    <section id="home" class="screen-card" aria-labelledby="game-title">
+      <div class="sunburst" aria-hidden="true"></div>
+      <aside id="avatar-panel" class="menu-side avatar-panel" aria-label="Selected chicken">
+        <label class="chicken-name-bar" for="chicken-name">
+          <span>CHICKEN NAME</span>
+          <input id="chicken-name" type="text" maxlength="12" autocomplete="off" spellcheck="false" aria-describedby="chicken-name-limit" />
+          <small id="chicken-name-limit">12 characters max</small>
+        </label>
+        <canvas id="avatar-canvas" width="190" height="210" role="button" tabindex="0" aria-label="Say hi to your selected chicken" title="Click to say hi"></canvas>
+        <strong id="avatar-name">Classic Chicken</strong>
+        <button id="wardrobe-button" class="round-menu-button" type="button" aria-label="Open chicken skins" title="Chicken skins">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M27 13c0-4 2-7 6-7s7 3 7 7c0 5-5 6-7 10M31 23 8 43c-3 3-1 8 3 8h43c4 0 6-5 3-8L35 23"/></svg>
+        </button>
+      </aside>
+
+      <button id="shop-button" class="menu-side shop-button" type="button" aria-label="Open chicken shop">
+        <span aria-hidden="true">🛒</span><strong>SHOP</strong>
+      </button>
+
+      <div class="menu-core">
+        <div class="logo-lockup">
+          <span class="eyebrow">THE GREAT FARM ESCAPE</span>
+          <h1 id="game-title"><span>RANCH</span><em>RUNNERS</em></h1>
+        </div>
+        <div class="wallet-row"><span class="egg-icon" aria-hidden="true"></span><strong id="wallet-eggs">0</strong><span>GOLDEN EGGS</span></div>
+        <div id="home-message" class="home-message">The farmer left the gate open. Run!</div>
+        <button id="play-button" class="play-button" type="button"><span>▶</span> PLAY</button>
+        <a class="download-button" href="./ranch-runners-game.zip" download>⬇ DOWNLOAD GAME</a>
+        <div class="best-row"><span>BEST RUN</span><strong id="best-score">0</strong></div>
+        <div class="controls-card" aria-label="Controls">
+          <span><kbd>←</kbd><kbd>→</kbd> Move</span>
+          <span><kbd>↑</kbd> Jump</span>
+          <span><kbd>↓</kbd> Duck</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="wardrobe-panel" class="menu-modal" aria-labelledby="wardrobe-title" hidden>
+      <div class="modal-card">
+        <header><div><span class="modal-kicker">YOUR COLLECTION</span><h2 id="wardrobe-title">Chicken Skins</h2></div><button class="modal-close" data-close-menu type="button" aria-label="Close skins">×</button></header>
+        <p>Choose any chicken you own.</p>
+        <div id="wardrobe-grid" class="skin-grid"></div>
+      </div>
+    </section>
+
+    <section id="shop-panel" class="menu-modal" aria-labelledby="shop-title" hidden>
+      <div class="modal-card">
+        <header><div><span class="modal-kicker">RANCH MARKET</span><h2 id="shop-title">Chicken Shop</h2></div><button class="modal-close" data-close-menu type="button" aria-label="Close shop">×</button></header>
+        <div class="shop-balance"><span class="egg-icon" aria-hidden="true"></span><strong id="shop-eggs">0</strong><span>available</span></div>
+        <section class="shop-section" aria-labelledby="farm-skins-title">
+          <div class="collection-heading"><div><span class="modal-kicker">FARM FAVORITES</span><h3 id="farm-skins-title">Classic Chickens</h3></div></div>
+          <div id="shop-grid" class="skin-grid"></div>
+        </section>
+        <section class="shop-section ice-cream-section" aria-labelledby="ice-cream-title">
+          <div class="collection-heading"><div><span class="modal-kicker">SCOOP SHOP</span><h3 id="ice-cream-title">Ice Cream Chickens</h3></div><span class="flavor-count">15 FLAVORS</span></div>
+          <p>Scroll through the full frozen flock.</p>
+          <div id="ice-cream-grid" class="skin-grid"></div>
+        </section>
+        <section class="shop-section cake-section" aria-labelledby="cake-title">
+          <div class="collection-heading"><div><span class="modal-kicker">BAKERY FLOCK</span><h3 id="cake-title">Cake Chickens</h3></div><span class="flavor-count cake-count">10 CAKES</span></div>
+          <p>Layer cakes, cupcakes, candles, and sprinkles.</p>
+          <div id="cake-grid" class="skin-grid"></div>
+        </section>
+        <section class="shop-section halloween-section" aria-labelledby="halloween-title">
+          <div class="collection-heading"><div><span class="modal-kicker">HAUNTED HENHOUSE</span><h3 id="halloween-title">Halloween Chickens</h3></div><span class="flavor-count halloween-count">15 COSTUMES</span></div>
+          <p>Witch hats, spooky colors, and Halloween charms.</p>
+          <div id="halloween-grid" class="skin-grid"></div>
+        </section>
+        <section class="shop-section career-section" aria-labelledby="career-title">
+          <div class="collection-heading"><div><span class="modal-kicker">ON THE JOB</span><h3 id="career-title">Career Chickens</h3></div><span class="flavor-count career-count">15 JOBS</span></div>
+          <p>Doctors, chefs, builders, pilots, artists, and more.</p>
+          <div id="career-grid" class="skin-grid"></div>
+        </section>
+        <section class="shop-section candy-section" aria-labelledby="candy-title">
+          <div class="collection-heading"><div><span class="modal-kicker">SWEET SHOP</span><h3 id="candy-title">Candy Chickens</h3></div><span class="flavor-count candy-count">20 TREATS</span></div>
+          <p>Gumdrops, lollipops, taffy, chocolate, and colorful candy sparkle.</p>
+          <div id="candy-grid" class="skin-grid"></div>
+        </section>
+        <section class="shop-section school-section" aria-labelledby="school-title">
+          <div class="collection-heading"><div><span class="modal-kicker">BACK TO SCHOOL</span><h3 id="school-title">School Chickens</h3></div><span class="flavor-count school-count">15 STUDENTS</span></div>
+          <p>Classroom clubs, backpacks, school caps, books, and honor-roll style.</p>
+          <div id="school-grid" class="skin-grid"></div>
+        </section>
+        <section class="shop-section football-section" aria-labelledby="football-title">
+          <div class="collection-heading"><div><span class="modal-kicker">GAME DAY</span><h3 id="football-title">Football Chickens</h3></div><span class="flavor-count football-count">15 TEAMS</span></div>
+          <p>American football jerseys, helmets, shoulder pads, and team colors—including the Saints Chicken.</p>
+          <div id="football-grid" class="skin-grid"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="soundboard-panel" class="menu-modal" aria-labelledby="soundboard-title" hidden>
+      <div class="modal-card soundboard-card">
+        <header><div><span class="modal-kicker">SECRET MENU</span><h2 id="soundboard-title">Soundboard</h2></div><button class="modal-close" data-close-menu type="button" aria-label="Close soundboard">×</button></header>
+        <p>Press a glossy button to play its sound.</p>
+        <div class="soundboard-grid">
+          <button class="soundboard-sound sound-red" type="button" data-soundboard-sound="funky" aria-label="Play funky-ehh(1).mp3"><span class="soundboard-button" aria-hidden="true"></span><strong>funky-ehh(1).mp3</strong></button>
+          <button class="soundboard-sound sound-blue" type="button" data-soundboard-sound="tung" aria-label="Play tung-tung-sahere-deer(1).mp3"><span class="soundboard-button" aria-hidden="true"></span><strong>tung-tung-sahere-deer(1).mp3</strong></button>
+          <button class="soundboard-sound sound-green" type="button" data-soundboard-sound="nathan" aria-label="Play i-cant-do-nathan(1).mp3"><span class="soundboard-button" aria-hidden="true"></span><strong>i-cant-do-nathan(1).mp3</strong></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="pause-screen" class="pause-screen" aria-labelledby="pause-title" hidden>
+      <div class="pause-card">
+        <span class="eyebrow">TAKE A BREATH</span>
+        <h2 id="pause-title">Paused</h2>
+        <button id="resume-button" class="play-button" type="button"><span>▶</span> RESUME</button>
+        <button id="pause-home-button" class="secondary-button" type="button">BACK TO MENU</button>
+      </div>
+    </section>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <div id="countdown" aria-live="polite"></div>
+
+    <nav id="touch-controls" aria-label="Touch controls" hidden>
+      <button data-action="left" aria-label="Move left">←</button>
+      <button data-action="jump" aria-label="Jump">↑</button>
+      <button data-action="duck" aria-label="Duck">↓</button>
+      <button data-action="right" aria-label="Move right">→</button>
+    </nav>
+
+    <div id="rotate-note">Turn your device sideways for more room</div>
+    <div id="loading">Loading the farm…</div>
+  </main>
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
